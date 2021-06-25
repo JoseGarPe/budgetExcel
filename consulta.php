@@ -31,7 +31,8 @@ $date =  date("Y-m-d");
 $lastDay= date("t", strtotime($date));
 function diaSemana($fecha){
     $dias = array('sunday','monday','tuesday','wednesday','thursday','friday','saturday');
-     $dia = $dias[(date('N', strtotime($fecha))) - 1];
+   //  $dia = $dias[(date('N', strtotime($fecha))) - 1];
+   $dia= date('l', strtotime($fecha));
      return $dia;
 }
 function cuenta_dias($mes,$anio,$numero_dia)
@@ -92,7 +93,7 @@ $sumaSabado=0;
     from public.sale_order as ped
     left join public.stock_warehouse as alm on ped.warehouse_id=alm.id
     WHERE ped.state NOT IN ('draft','sent','cancel','done') AND ped.company_id=1
-    AND (ped.confirmation_date-INTERVAL '6 hours')>='2021-06-01 00:00:00' AND ped.warehouse_id=$sucursales[$i]
+    AND (ped.confirmation_date-INTERVAL '6 hours')>='2021-01-01 00:00:00' AND ped.warehouse_id=$sucursales[$i]
     ";
 //echo $queryEncabezado;
     $resultMontos = pg_query($dbconn,$queryEncabezado) or die('La consulta fallo: ' . pg_last_error());
@@ -184,13 +185,22 @@ $sumaSabado=0;
     $porcentajeDomingo=0;
     //-------------------calculo porcentaje ----------------------------//
     //echo $sumaPromedio;
-    $porcentajeLunes=($sumaLunes/$totalSucursal)*100;
+   /* $porcentajeLunes=($sumaLunes/$totalSucursal)*100;
     $porcentajeMartes=($sumaMartes/$totalSucursal)*100;
     $porcentajeMiercoles=($sumaMiercoles/$totalSucursal)*100;
     $porcentajeJueves=($sumaJueves/$totalSucursal)*100;
     $porcentajeViernes=($sumaViernes/$totalSucursal)*100;
     $porcentajeSabado=($sumaSabado/$totalSucursal)*100;
-    $porcentajeDomingo=($sumaDomingo/$totalSucursal)*100;
+    $porcentajeDomingo=($sumaDomingo/$totalSucursal)*100;*/
+    //--------------------------------------------------------------//
+    $porcentajeLunes=($promedioLunes/$sumaPromedio)*100;
+    $porcentajeMartes=($promedioMartes/$sumaPromedio)*100;
+    $porcentajeMiercoles=($promedioMiercoles/$sumaPromedio)*100;
+    $porcentajeJueves=($promedioJueves/$sumaPromedio)*100;
+    $porcentajeViernes=($promedioViernes/$sumaPromedio)*100;
+    $porcentajeSabado=($promedioSabados/$sumaPromedio)*100;
+    $porcentajeDomingo=($promedioDomingos/$sumaPromedio)*100;
+    //--------------------------------------------------------------//
     $sumaPorcentajes=$porcentajeLunes+$porcentajeMartes+$porcentajeMiercoles+$porcentajeJueves+$porcentajeViernes+$porcentajeSabado+$porcentajeDomingo;
     //------------------------------------------------------//
     echo 'Promedio de montos para dia Lunes: '.$promedioLunes.', porcentaje:'.$porcentajeLunes.'<br>';
@@ -221,42 +231,67 @@ $sumaSabado=0;
     $sucursalCELL= $sheet->getCell("A".$row)->getValue();
     if ($sucursalCELL==$sucursales[$i]) {
        $budgetSucursal=$sheet->getCell("C".$row)->getValue();
-
-            $participacionBudgetL=($porcentajeLunes/100)*$budgetSucursal;
-            $participacionBudgetM=($porcentajeMartes/100)*$budgetSucursal;
-            $participacionBudgetMi=($porcentajeMiercoles/100)*$budgetSucursal;
-            $participacionBudgetJ=($porcentajeJueves/100)*$budgetSucursal;
-            $participacionBudgetV=($porcentajeViernes/100)*$budgetSucursal;
-            $participacionBudgetS=($porcentajeSabado/100)*$budgetSucursal;
-            $participacionBudgetD=($porcentajeDomingo/100)*$budgetSucursal;
+        //----------------------------------------------------------------------------------//
+         /*   $participacionBudgetL=(intval($porcentajeLunes)/100)*$budgetSucursal;
+            $participacionBudgetM=(intval($porcentajeMartes)/100)*$budgetSucursal;
+            $participacionBudgetMi=(intval($porcentajeMiercoles)/100)*$budgetSucursal;
+            $participacionBudgetJ=(intval($porcentajeJueves)/100)*$budgetSucursal;
+            $participacionBudgetV=(intval($porcentajeViernes)/100)*$budgetSucursal;
+            $participacionBudgetS=(intval($porcentajeSabado)/100)*$budgetSucursal;
+            $participacionBudgetD=(intval($porcentajeDomingo)/100)*$budgetSucursal;*/
+        //-----------------------------------------------------------------------------------//
+        $participacionBudgetL=(($porcentajeLunes)/100)*$budgetSucursal;
+        $participacionBudgetM=(($porcentajeMartes)/100)*$budgetSucursal;
+        $participacionBudgetMi=(($porcentajeMiercoles)/100)*$budgetSucursal;
+        $participacionBudgetJ=(($porcentajeJueves)/100)*$budgetSucursal;
+        $participacionBudgetV=(($porcentajeViernes)/100)*$budgetSucursal;
+        $participacionBudgetS=(($porcentajeSabado)/100)*$budgetSucursal;
+        $participacionBudgetD=(($porcentajeDomingo)/100)*$budgetSucursal;
     }    
   
    }
    $year=date('Y');
    $mes=date('m');
+   $numDiaL=0;
+   $numDiaM=0;
+   $numDiaMi=0;
+   $numDiaJ=0;
+   $numDiaV=0;
+   $numDiaS=0;
+   $numDiaD=0;
+   echo '<table style="border: 1px solid black;">
+   <tr><td>Dias</td><td>Lunes</td><td>Martes</td><td>Miercoles</td><td>Jueves</td><td>Viernes</td><td>Sabadp</td><td>Domingo</td></tr>';
    for ($day=1; $day <=7 ; $day++) { 
     
         if ($day==1) {
             $participacionLunes=$participacionBudgetL/cuenta_dias($mes,$year,$day);
+            $numDiaL=cuenta_dias($mes,$year,$day);
         }elseif ($day==2) {
             $participacionMartes=$participacionBudgetM/cuenta_dias($mes,$year,$day);
+            $numDiaM=cuenta_dias($mes,$year,$day);
         }elseif ($day==3) {
             $participacionMiercoles=$participacionBudgetMi/cuenta_dias($mes,$year,$day);
+            $numDiaMi=cuenta_dias($mes,$year,$day);
         }elseif ($day==4) {
+            $numDiaJ=cuenta_dias($mes,$year,$day);
             $participacionJueves=$participacionBudgetJ/cuenta_dias($mes,$year,$day);
         }elseif ($day==5) {
             $participacionViernes=$participacionBudgetV/cuenta_dias($mes,$year,$day);
+            $numDiaV=cuenta_dias($mes,$year,$day);
         }elseif ($day==6) {
             $participacionSabados=$participacionBudgetS/cuenta_dias($mes,$year,$day);
+            $numDiaS=cuenta_dias($mes,$year,$day);
         }else{
             $participacionDomingos=$participacionBudgetD/cuenta_dias($mes,$year,$day);
+            $numDiaD=cuenta_dias($mes,$year,$day);
         }
     }
 //echo $participacionJueves;
 echo 'Budget Sucursal: $'.$budgetSucursal;
  $totalBudget=$participacionBudgetL+$participacionBudgetM+$participacionBudgetMi+$participacionBudgetJ+$participacionBudgetV+$participacionBudgetS+$participacionBudgetD;
- echo '<table style="border: 1px solid black;">
- <tr><td>Dias</td><td>Domingo</td><td>Lunes</td><td>Martes</td><td>Miercoles</td><td>Jueves</td><td>Viernes</td><td>Sabadp</td></tr>';
+ echo "<tr><td>Numero de dias</td>";
+ echo "<td>$numDiaL</td><td>$numDiaM</td><td>$numDiaMi</td><td>$numDiaJ</td><td>$numDiaV</td><td>$numDiaS</td><td>$numDiaD</td>";       
+ echo '</tr>';
  echo "<tr><td>Participacion Budget</td><td>$participacionBudgetL</td><td>$$participacionBudgetM</td><td>$$participacionBudgetMi</td><td>$$participacionBudgetJ</td><td>$$participacionBudgetV</td><td>$$participacionBudgetS</td><td>$$participacionBudgetD</td></tr>";
  echo "<tr><td>Participacion Diaria</td><td>$participacionLunes</td><td>$$participacionMartes</td><td>$$participacionMiercoles</td><td>$$participacionJueves</td><td>$$participacionViernes</td><td>$$participacionSabados</td><td>$$participacionDomingos</td></tr>";
  echo "<tr><td>Total</td><td colspan='6'>$totalBudget</td></tr></table>";
@@ -267,25 +302,35 @@ echo 'Budget Sucursal: $'.$budgetSucursal;
   echo "<table  border='1'>
   <tr><td>FECHA</td><td>DIA</td><td>BUDGET_CALCULO</td><td>ID WAREHOUSE</td></tr>";
  for ($dy=1; $dy <= $lastDay; $dy++) { 
-     if ($dy<10) {
-        $fecha=$year.'-'.$mes.'-0'.$dy; 
+  /* if ($dy<10) {
+        $fecha="0$dy/$mes/$year"; 
      }else{
-        $fecha=$year.'-'.$mes.'-'.$dy;
+        $fecha="$dy/$mes/$year"; 
+     }*/
+    if ($dy<10) {
+        $fecha="$year/$mes/0$dy"; 
+     }else{
+        $fecha="$year/$mes/$dy"; 
      }
      
-     $dia=diaSemana($fecha);
+     if ($dy<10) {
+        $dia=diaSemana("$mes/0$dy/$year");
+     }else{
+        $dia=diaSemana("$mes/$dy/$year");
+     }
+     
      $montoDia=0;
-     if ($dia=='sunday') {
+     if ($dia=='Sunday') {
          $montoDia=$participacionDomingos;     
-     }elseif ($dia=='monday') {
+     }elseif ($dia=='Monday') {
         $montoDia=$participacionLunes;     
-     }elseif ($dia=='tuesday') {
+     }elseif ($dia=='Tuesday') {
         $montoDia=$participacionMartes;     
-     }elseif ($dia=='wednesday') {
+     }elseif ($dia=='Wednesday') {
         $montoDia=$participacionMiercoles;     
-     }elseif ($dia=='thursday') {
+     }elseif ($dia=='Thursday') {
         $montoDia=$participacionJueves;     
-     }elseif ($dia=='friday') {
+     }elseif ($dia=='Friday') {
         $montoDia=$participacionViernes;     
      }else{
         $montoDia=$participacionSabados;  
@@ -338,6 +383,8 @@ echo 'TOTAL EMPRESA: $'.$totalEmpresa.'<br>';
                 //--------------------------------------------------------//
             }
            
+            echo diaSemana('06/01/2021');
        
     }
+    
 ?>
