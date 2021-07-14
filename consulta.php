@@ -23,7 +23,7 @@ $conn = mysqli_connect($servername, $username, $password, $database);
     }
 }
 //conexion a la base
-$dbconn = pg_connect("host=i7serverdb.cainoaw1vj7x.us-east-1.rds.amazonaws.com dbname=prod1 user=bi_index password=1nd3Xx.7!")
+$dbconn = pg_connect("host=odoo12i7.cainoaw1vj7x.us-east-1.rds.amazonaws.com dbname=prod1 user=bi_index password=1nd3Xx.7!")
     or die('No se ha podido conectar: ' . pg_last_error());
 //-*------------------------------------------//
 //FUNCIONES DIAS 
